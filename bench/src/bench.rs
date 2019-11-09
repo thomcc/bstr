@@ -262,6 +262,35 @@ fn byte_lines(c: &mut Criterion) {
     });
 }
 
+fn count_byte(c: &mut Criterion) {
+    // Our current implementation is faster for needles that appear
+    // infrequently, so it's important that this covers cases where the byte is
+    // very frequent in the search text in addition to more typical use cases.
+    let corpora = [
+        ("missing", REPEATED_RARE_SMALL, b'a', 0),
+        ("normal", SUBTITLE_EN_HUGE, b'\n', 18664),
+        ("frequent", REPEATED_RARE_SMALL, b'z', 1000),
+    ];
+
+    for &(name, corpus, search, expect) in &corpora {
+        define(c, "bstr/count_byte", name, corpus, move |b| {
+            b.iter(|| {
+                let count = corpus.count_byte(search);
+                assert_eq!(count, expect);
+            });
+        });
+    }
+
+    for &(name, corpus, search, expect) in &corpora {
+        define(c, "std/count_byte", name, corpus, move |b| {
+            b.iter(|| {
+                let count = corpus.iter().filter(|&&b| b == search).count();
+                assert_eq!(count, expect);
+            });
+        });
+    }
+}
+
 fn define(
     c: &mut Criterion,
     group_name: &str,
@@ -289,4 +318,5 @@ criterion_group!(g11, search::rfind_iter);
 criterion_group!(g12, search::find_char);
 criterion_group!(g13, search::find_byteset);
 criterion_group!(g14, search::find_not_byteset);
-criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14);
+criterion_group!(g15, count_byte);
+criterion_main!(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15);

@@ -11,7 +11,7 @@ use core::ptr;
 use core::slice;
 use core::str;
 
-use memchr::{memchr, memrchr};
+use memchr::{memchr, memrchr, memchr_iter};
 
 use ascii;
 use bstr::BStr;
@@ -812,6 +812,24 @@ pub trait ByteSlice: Sealed {
         needle: &'a B,
     ) -> FindReverse<'a> {
         FindReverse::new(self.as_bytes(), needle.as_ref())
+    }
+
+    /// Returns the number of times the of the first occurrence of the given byte. If the
+    /// byte does not occur in this byte string, then `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use bstr::ByteSlice;
+    ///
+    /// assert_eq!(Some(10), b"foo bar baz".find_byte(b'z'));
+    /// assert_eq!(None, b"foo bar baz".find_byte(b'y'));
+    /// ```
+    #[inline]
+    fn count_byte(&self, byte: u8) -> usize {
+        memchr_iter(byte, self.as_bytes()).count()
     }
 
     /// Returns the index of the first occurrence of the given byte. If the
